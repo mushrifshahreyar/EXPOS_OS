@@ -9,7 +9,7 @@ SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;
 pcb = PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16);
 
 retAddr = ([PTBR + (2 * ((userSP-1) / 512))] * 512) + ((userSP - 1) % 512);
-syscall = ([PTBR + (2 * ((userSP-5) / 512))] * 512) + ((userSP - 5) % 512);
+syscall = [([PTBR + (2 * ((userSP-5) / 512))] * 512) + ((userSP - 5) % 512)];
 [pcb + 9] = syscall;
 
 if(syscall == 2) then
@@ -32,6 +32,7 @@ if(syscall == 2) then
         SP = [pcb + 13];
         ireturn;
     endif;
+    breakpoint;
     alias module_ret R10;
     multipush(R0,R1,R2,R3,R4,R5);
         R1 = 3;
@@ -45,7 +46,7 @@ if(syscall == 2) then
         SP = [pcb + 13];
         ireturn;
     endif;
-
+    breakpoint;
     [resource_table + (i * 2) + 0] = 0;
     [resource_table + (i * 2) + 1] = module_ret;
 
@@ -73,11 +74,11 @@ if(syscall == 3) then
         ireturn;
    endif;
 
-    multipush(R0,R1,R2,R3,R4,R5,R6);
+    multipush(R0,R1,R2,R3,R4,R6);
         R1 = 4;
         R2 = [resource_table + (fileID * 2) + 1];
         call MOD_3;
-    multipop(R0,R1,R2,R3,R4,R5,R6);
+    multipop(R0,R1,R2,R3,R4,R6);
 
     [resource_table + (fileID * 2) + 0] = -1;
     [resource_table + (fileID * 2) + 1] = -1;

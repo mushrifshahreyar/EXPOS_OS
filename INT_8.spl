@@ -131,7 +131,7 @@ while(i < 8) do
     endif;
     if([parent_sp + (i * 2) + 0] == 0) then
         index = [parent_sp + (i * 2) + 1];
-        [FILE_OPEN_TABLE + (index * 4) + 1] = [FILE_OPEN_TABLE + (index * 4) + 1] + 1;
+        [OPEN_FILE_TABLE + (index * 4) + 1] = [OPEN_FILE_TABLE + (index * 4) + 1] + 1;
     endif;
     i = i + 1;
 endwhile;

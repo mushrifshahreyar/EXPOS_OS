@@ -4,7 +4,7 @@ alias retValue R0;
 
 if(functionno == 1) then
     alias buffNo R3;
-    while([BUFFER_TABLE + (buffNo * 4) + 2] != -1) then
+    while([BUFFER_TABLE + (buffNo * 4) + 2] != -1) do
         [PROCESS_TABLE + (currPID * 16) + 4] = WAIT_BUFFER;
         [PROCESS_TABLE + (currPID * 16) + 5] = buffNo;
         multipush(R1,R2,R3);
