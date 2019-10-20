@@ -14,8 +14,8 @@ loadi(10,23);
 loadi(11,24);
 
 //Loading INT5
-//loadi(12,25);
-//loadi(13,26);
+loadi(12,25);
+loadi(13,26);
 
 //Loading INT6
 loadi(14,27);
@@ -88,6 +88,10 @@ loadi(43,56);
 //Loading Memory Module
 loadi(44,57);
 loadi(45,58);
+
+//Loading File Module
+loadi(46,59);
+loadi(47,60);
 
 //Loading Device Module
 loadi(48,61);
@@ -230,6 +234,15 @@ while(i < 60) do
 
     [FILE_STATUS_TABLE + (i * 4) + 0] = -1;
     [FILE_STATUS_TABLE + (i * 4) + 1] = -1;
+    i = i + 1;
+endwhile;
+
+i = 0;
+while(i < 32) do
+    [OPEN_FILE_TABLE + (i * 4) + 0] = -1;
+    [OPEN_FILE_TABLE + (i * 4) + 1] = -1;
+    [OPEN_FILE_TABLE + (i * 4) + 2] = 0;
+    
     i = i + 1;
 endwhile;
 

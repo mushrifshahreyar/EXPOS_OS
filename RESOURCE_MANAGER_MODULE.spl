@@ -5,14 +5,36 @@ alias retValue R0;
 if(functionno == 1) then
     alias buffNo R3;
     while([BUFFER_TABLE + (buffNo * 4) + 2] != -1) then
+        [PROCESS_TABLE + (currPID * 16) + 4] = WAIT_BUFFER;
+        [PROCESS_TABLE + (currPID * 16) + 5] = buffNo;
         multipush(R1,R2,R3);
-            
+            call MOD_5;
         multipop(R1,R2,R3);
     endwhile;
+
+    [BUFFER_TABLE + (buffNo * 4) + 2] = currPID;
+
+    return;
+
 endif;
 
 if(functionno == 2) then
-
+    alias buffNo R3;
+    if(currPID != [BUFFER_TABLE + (buffNo * 4) + 2]) then
+        R0 = -1;
+        return;
+    endif;
+    [BUFFER_TABLE + (buffNo * 4) + 2] = -1;
+    alias i R4;
+    i = 0;
+    while(i<16) do
+        if(([PROCESS_TABLE + (i * 16) + 4] == WAIT_BUFFER) && ([PROCESS_TABLE + (i * 16) + 5] == buffNo)) then
+            [PROCESS_TABLE + (i * 16) + 4] = READY;
+        endif;
+        i = i + 1;
+    endwhile;
+    R0 = 0;
+    return;
 endif;
 if(functionno == 3) then
     while([DISK_STATUS_TABLE + 0] == 1) do
