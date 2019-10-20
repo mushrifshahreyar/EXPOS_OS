@@ -1,0 +1,10 @@
+load --os /shortpath/FIN_OS_STARTUP.xsm
+load --idle /shortpath/FIN_IDLE.xsm
+load --int=timer /shortpath/TIMER_ISR.xsm
+load --module 5 /shortpath/SCHEDULER.xsm
+load --init /shortpath/odd.xsm
+load --int=7 /shortpath/FIN_INT_7.xsm
+load --module 7 /shortpath/BOOT_MODULE.xsm
+load --int=10 /shortpath/INT_10.xsm
+load --module 0 /shortpath/RESOURCE_MANAGER_MODULE.xsm
+load --module 4 /shortpath/DEVICE_MANAGER_MODULE.xsm

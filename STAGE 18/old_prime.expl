@@ -1,0 +1,31 @@
+decl
+    int a[100];
+enddecl
+int main() {
+    decl
+        int temp,i,j,ret,k,largest;
+    enddecl
+    begin
+        i=100;
+        largest = 0;
+        while(i >= 2) do
+            j=2;
+            temp = 0;
+            while(j < i) do 
+                if((i % j) == 0) then
+                    temp = 1;
+                    break;
+                endif;
+                j = j + 1;
+            endwhile;
+            if(temp == 0) then
+                if(largest < i) then
+                    largest = i;
+                endif;
+            endif;
+            i = i - 1;
+        endwhile;
+        ret = exposcall("Write",-2,largest);
+        return 0;
+    end
+}

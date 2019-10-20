@@ -1,0 +1,53 @@
+[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 5;
+
+[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 -1;
+
+backup;
+alias userSP R7;
+userSP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+alias physical_page_no R1;
+alias offset R2;
+alias filedescriptive R3;
+physical_page_no = [PTBR + 2 * ((userSP - 4) / 512)];
+offset = (userSP-4) % 512;
+filedescriptive = (physical_page_no * 512) + offset;
+alias filedesc R4;
+filedesc = [filedescriptive];
+
+if(filedesc != -2) 
+then
+    alias physicalAddrRetVal R5;
+	physicalAddrRetVal = ([PTBR + 2 * ((userSP - 1) / 512)] * 512) + ((userSP - 1) % 512);
+    [physicalAddrRetVal] = -1;
+else
+    alias word R5;
+    word = [[PTBR + 2 * ((userSP - 3) / 512)] * 512 + ((userSP - 3) % 512)];
+    //print word;
+
+    //MODIFICATION
+        multipush(R0,R1,R2,R3,R4,R5,R6,R7);
+        alias functionno R1;
+        alias pid R2;
+        alias newword R3;
+
+        functionno = 3;
+        pid = [SYSTEM_STATUS_TABLE + 1];
+        newword = [[PTBR + 2 * ((userSP - 3) / 512)] * 512 + ((userSP - 3) % 512)];
+        call MOD_4;
+
+        multipop(R0,R1,R2,R3,R4,R5,R6,R7);
+    //ENDS
+
+
+    alias physicalAddrRetVal R6;
+	physicalAddrRetVal = ([PTBR + 2 * ((userSP - 1) / 512)] * 512) + ((userSP - 1) % 512);
+    [physicalAddrRetVal] = 0;
+endif;
+
+restore;
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 0;
+
+ireturn;
+

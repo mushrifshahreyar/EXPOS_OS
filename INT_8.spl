@@ -1,0 +1,149 @@
+[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 8;
+[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;
+alias userSP R0;
+userSP = SP; 
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;
+alias child_pid R10;
+
+//Get pcb id
+multipush(R0);
+R1 = 1;
+call MOD_1;
+
+child_pid = R0;
+multipop(R0);
+
+if(child_pid == -1) then
+    [([PTBR + 2 * ((userSP - 1) / 512)] * 512) + ((userSP - 1) % 512)] = -1;
+    [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 0;
+    SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+    ireturn;
+endif;
+
+[PROCESS_TABLE + (child_pid * 16) + 1] = child_pid;
+if([PTBR + 4] == -1) then
+    multipush(R0,R10);
+        R1 = 1;
+        call MOD_2;
+
+        [PTBR + 4] = R0;
+        [PTBR + 5] = "0110";
+    
+        R1 = 1;
+        call MOD_2;
+
+        [PTBR + 6] = R0;
+        [PTBR + 7] = "0110";
+    multipop(R0,R10);
+endif;
+
+alias child_ptbr R11;
+child_ptbr = PAGE_TABLE_BASE + (child_pid * 20);
+
+alias i R14;
+i = 0;
+while(i<16) do
+    [child_ptbr + i] = [PTBR + i];
+    [MEMORY_FREE_LIST + [PTBR + i]] = [MEMORY_FREE_LIST + [PTBR + i]] + 1;
+
+    [child_ptbr + i + 1] = [PTBR + i + 1];
+    i = i + 2;
+endwhile;
+
+multipush(R0,R10,R11,R14);
+    R1 = 1;
+    call MOD_2;
+
+    [child_ptbr + 16] = R0;
+    [child_ptbr + 17] = "0110";
+    
+    R1 = 1;
+    call MOD_2;
+
+    [child_ptbr + 18] = R0;
+    [child_ptbr + 19] = "0110"; 
+
+    R1 = 1;
+    call MOD_2;
+
+    [PROCESS_TABLE + (child_pid * 16) + 11] = R0;
+multipop(R0,R10,R11,R14);
+
+alias parent_sp R12;
+alias child_sp R13;
+
+parent_sp = PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16);
+child_sp = PROCESS_TABLE + (child_pid * 16);
+//Process table initializing
+[child_sp + 0] = 0;
+[child_sp + 1] = child_pid;
+[child_sp + 2] =  [SYSTEM_STATUS_TABLE + 1];
+[child_sp + 3] = [parent_sp + 3];
+[child_sp + 5] = 0;
+[child_sp + 6] = [parent_sp + 6];
+[child_sp + 7] = [parent_sp + 7];
+[child_sp + 9] = 0;
+[child_sp + 10] = [parent_sp + 10];
+[child_sp + 12] = 0;
+[child_sp + 13] = [parent_sp + 13];
+[child_sp + 14] = child_ptbr;
+[child_sp + 15] = 10;
+
+//Disk map Table initializing
+i = 0;
+child_sp = DISK_MAP_TABLE + (child_pid * 10);
+parent_sp = DISK_MAP_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 10);
+while(i<10) do
+    [child_sp + i] = [parent_sp + i];
+    i = i + 1;
+endwhile;
+
+//Copying the contents
+
+parent_sp = [PTBR + 16] * 512;
+child_sp = [child_ptbr + 16] * 512;
+
+i = 0;
+while(i < 512) do
+    [child_sp + i] = [parent_sp + i];
+    i = i + 1;
+endwhile;
+
+parent_sp = [PTBR + 18] * 512;
+child_sp = [child_ptbr + 18] * 512;
+
+i = 0;
+while(i < 512) do
+    [child_sp + i] = [parent_sp + i];
+    i = i + 1;
+endwhile;
+
+alias index R15;
+i = 0;
+parent_sp = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 + 495;
+child_sp = [PROCESS_TABLE + (child_pid * 16) + 11] * 512 + 495;
+while(i < 8) do   
+    [child_sp + (i * 2) + 0] = [parent_sp + (i * 2) + 0];
+    [child_sp + (i * 2) + 1] = [parent_sp + (i * 2) + 1];
+    if([parent_sp + (i * 2) + 0] == 1) then
+        index = [parent_sp + (i * 2) + 1];
+        [SEMAPHORE_TABLE + (index * 4) + 1] = [SEMAPHORE_TABLE + (index * 4) + 1] + 1;
+    endif;
+    if([parent_sp + (i * 2) + 0] == 0) then
+        index = [parent_sp + (i * 2) + 1];
+        [FILE_OPEN_TABLE + (index * 4) + 1] = [FILE_OPEN_TABLE + (index * 4) + 1] + 1;
+    endif;
+    i = i + 1;
+endwhile;
+
+[[PROCESS_TABLE + (child_pid * 16) + 11] * 512] = BP;
+
+[PROCESS_TABLE + (child_pid * 16) + 4] = CREATED;
+
+[([PTBR +  2 * ((userSP-1)/512)] * 512) + ((userSP - 1) % 512)] = child_pid;
+[([child_ptbr +  2 * ((userSP-1)/512)] * 512) + ((userSP - 1) % 512)] = 0;
+
+[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 0;
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+
+ireturn;

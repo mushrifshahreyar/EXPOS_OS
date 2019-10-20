@@ -1,0 +1,81 @@
+
+
+type
+List
+{
+    int data;
+    List next;
+}
+endtype
+            
+decl
+    List head;
+    int x, pid, temp, length,data;
+enddecl
+            
+int main()
+{
+decl
+    List p, q;
+    int i;
+enddecl
+            
+begin
+    temp = exposcall("Heapset");
+    pid = exposcall("Fork");
+    
+    if(pid==0) then
+    	head = null;
+    	q = head;
+
+    	length=1;
+    	while (length <= 100)  do
+        	p = exposcall("Alloc",2);
+		    temp=exposcall("Read",-1,data);
+		
+		if(data==0) then
+			break;
+		endif;
+        	p.data = data;
+        	p.next = null;
+        
+       	 	if (head == null) then
+            		head = p;
+            		q = p;
+        	else
+            		q.next = p;
+            		q = q.next;
+                    
+        	endif;
+            
+            length = length+1;
+    	endwhile; 
+	p=head;
+        while(p != null)  do
+            x = p.data;
+            temp = exposcall("Write",-2,"++");
+            temp = exposcall("Write",-2,x);
+            p = p.next;
+        endwhile;      
+        temp = exposcall("Signal");
+        breakpoint;  
+    else
+    temp=exposcall("Wait",pid);
+    breakpoint;
+	p=head;
+    x = head.data;
+    temp = exposcall("Write",-2,x);
+    //    while(p != null)  do
+    //        x = p.data;
+    //        temp = exposcall("Write",-2,"--");
+    //        temp = exposcall("Write",-2,x);
+    //        p = p.next;
+    //    endwhile;
+
+    endif;
+                
+    return 0;
+end
+}
+
+

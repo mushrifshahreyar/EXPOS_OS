@@ -1,0 +1,16 @@
+int main() {
+    decl
+        str filename;
+        int permission,temp;
+    enddecl
+
+    begin
+        temp = exposcall("Read",-1,filename);
+        
+        breakpoint;
+        temp = exposcall("Delete",filename);
+        temp = exposcall("Write",-2,temp);
+        return 0;
+    end
+
+}

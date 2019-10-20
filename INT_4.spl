@@ -1,0 +1,184 @@
+alias syscall R0;
+alias userSP R1;
+alias returnAddr R15;
+alias pcb R14;
+
+pcb = PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16);
+userSP = SP;
+syscall = [([PTBR + ((userSP-5)/512) * 2] * 512) + (userSP - 5) % 512]; 
+[pcb + 13] = userSP;
+SP = [pcb + 11] * 512 - 1;
+[pcb + 9] = syscall;
+returnAddr = ([PTBR + 2 * ((userSP - 1)/512)] * 512) + ((userSP - 1) % 512);
+
+breakpoint;
+if(syscall == 1) then
+    alias filename R2;
+    alias permission R3;
+
+    filename = [([PTBR + 2 * ((userSP - 4) / 512)] * 512) + ((userSP - 4) % 512)];
+    permission = [([PTBR + 2 * ((userSP - 3) / 512)] * 512) + ((userSP - 3) % 512)];
+
+    
+    alias i R4;
+    i = 0;
+    while(i < MAX_FILE_NUM) do
+        if([INODE_TABLE + (i * 16) + 1] == filename) then
+            break;
+        endif;
+        i =  i + 1;
+    endwhile;
+    if(i == MAX_FILE_NUM) then
+        i = 0;
+        while(i < MAX_FILE_NUM) do
+            if([INODE_TABLE + (i * 16) + 1] == -1) then
+                break;
+            endif;
+            i = i + 1;
+        endwhile;
+
+        if(i == MAX_FILE_NUM) then
+            [returnAddr] = -1;
+            SP = [pcb + 13];
+            [pcb + 9] = 0;
+            ireturn;    
+        endif;
+
+        alias inode_table R5;
+        inode_table = INODE_TABLE + (i * 16);
+
+        [inode_table + 0] = 2;
+        [inode_table + 1] = filename;
+        [inode_table + 2] = 0;
+        [inode_table + 3] = [pcb + 3];
+        [inode_table + 4] = permission;
+        [inode_table + 8] = -1;
+        [inode_table + 9] = -1;
+        [inode_table + 10] = -1;
+        [inode_table + 11] = -1;
+
+        alias root_file R6;
+
+        root_file = ROOT_FILE + (i * 8);
+        [root_file + 0] = filename;
+        [root_file + 1] = 0;
+        [root_file + 2] = 2;
+        [root_file + 3] = [USER_TABLE + ([INODE_TABLE + (i * 16) + 3] * 2)];
+        [root_file + 4] = permission;
+        
+        [returnAddr] = 0;
+
+
+    else
+        [returnAddr] = 0;
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        ireturn;
+
+    endif;
+endif;
+
+if(syscall == 4) then
+    alias filename R2;
+    filename = [([PTBR + 2 * ((userSP - 4) / 512)] * 512) + ((userSP - 4) % 512)];
+    breakpoint;
+    alias i R10;
+    i = 0;
+    while(i< MAX_FILE_NUM) do
+        if([INODE_TABLE + (i * 16) + 1] == filename) then
+            break;
+        endif;      
+        i = i + 1;
+    endwhile;
+    breakpoint;
+    if(i == MAX_FILE_NUM) then
+        [returnAddr] = 0;
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        ireturn;
+    
+    else 
+        if([INODE_TABLE + (i * 16) + 0] != 2) then
+            [returnAddr] = -1;
+            SP = [pcb + 13];
+            [pcb + 9] = 0;
+            ireturn;
+        endif;
+
+        if([INODE_TABLE + (i * 16) + 4] == 0) then
+            if(([pcb + 3] != 1) && ([pcb + 3]  != [INODE_TABLE + (i * 16) + 4]) ) then
+                [returnAddr] = -1;
+                SP = [pcb + 13];
+                [pcb + 9] = 0;
+                ireturn;
+            endif;
+        endif;
+        breakpoint;
+        multipush(R0,R1,R2,R3,R4,R5,R10,R14,R15);
+            R1 = 4;
+            R2 = [SYSTEM_STATUS_TABLE + 1];
+            R3 = i;
+            call MOD_0;
+        multipop(R0,R1,R2,R3,R4,R5,R10,R14,R15);
+
+        if([FILE_STATUS_TABLE + (i * 4) + 1] != -1) then
+            multipush(R0,R1,R2,R3,R4,R10,R14,R15);
+                R1 = 5;
+                R2 = [SYSTEM_STATUS_TABLE + 1];
+                R3 = i;
+                call MOD_0;
+            multipop(R0,R1,R2,R3,R4,R10,R14,R15);
+            [returnAddr] = -2;
+            SP = [pcb + 13];
+            [pcb + 9] = 0;
+            ireturn;
+        endif;
+
+        alias j R11;
+        alias blockno R12;
+        j = 8;
+        while(j<12) do
+            blockno = [INODE_TABLE + (i * 16) + j];
+            if(blockno != -1) then
+                //errrrrrrrrrror
+                if([BUFFER_TABLE + ((blockno % 4) * 4) + 0] == blockno) then
+                    [BUFFER_TABLE + ((blockno % 4) * 4) + 1] = 0;
+                endif;
+
+                multipush(R0,R1,R2,R3,R10,R14,R15);
+                    R1 = 4;
+                    R2 = blockno;
+                    call MOD_2;
+                multipop(R0,R1,R2,R3,R10,R14,R15);
+            endif;
+            j = j + 1;
+        endwhile;
+
+        alias inode_table R5;
+        alias root_file R6;
+
+        inode_table = INODE_TABLE + (i * 16);
+        root_file = ROOT_FILE + (i * 8);
+
+        [inode_table + 1] = -1;
+        
+        [root_file + 0] = -1;        
+        breakpoint;
+        multipush(R0,R1,R2,R3,R4,R5,R6,R10,R14,R15);
+            R1 = 5;
+            R2 = [SYSTEM_STATUS_TABLE + 1];
+            R3 = i;
+            call MOD_0;
+        multipop(R0,R1,R2,R3,R4,R5,R6,R10,R14,R15);
+        breakpoint;
+        [returnAddr] = 0;
+
+    endif;
+
+
+endif;
+
+[pcb + 9] = 0;
+SP = [pcb + 13];
+ireturn;
+

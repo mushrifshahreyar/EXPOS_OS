@@ -1,0 +1,35 @@
+type
+myval {
+    int data;
+}
+endtype
+
+decl
+    myval a;
+enddecl
+
+int main() {
+    decl
+    int pid,temp;
+    enddecl
+    
+    begin
+        a = exposcall("Alloc",2);
+        a.data = 0;
+
+        pid = exposcall("Fork");
+
+        if(pid != 0) then
+            temp = exposcall("Wait",pid);
+            a.data = a.data + 1;
+            temp = exposcall("Write",-2,a.data);
+        else
+            a.data = a.data + 1;     
+            temp = exposcall("Write",-2,a.data);
+            temp = exposcall("Signal");
+        endif;
+
+
+        return 0;
+    end
+}

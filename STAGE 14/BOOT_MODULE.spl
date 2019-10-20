@@ -1,0 +1,128 @@
+//USED PAGES
+//76,77,78,79,80,81,82,83,84,85,86,87,88
+
+//Loading INIT
+loadi(65,7);
+loadi(66,8);
+
+//Loading INT7
+loadi(16,29);
+loadi(17,30);
+
+//Loading INT10
+loadi(22,35);
+loadi(23,36);
+
+//Loading exception handler
+loadi(2,15);
+loadi(3,16);
+
+//Loading Library
+loadi(63,13);
+loadi(64,14);
+
+//Loading timer interrupt
+loadi(4,17);
+loadi(5,18);
+
+//Loading Scheduler
+loadi(50,63);
+loadi(51,64);
+
+//Loading even.xsm
+loadi(83,71);
+
+
+//Pagetable for init
+PTBR = PAGE_TABLE_BASE + 20;
+PTLR = 10;
+
+[PTBR + 0] = 63;
+[PTBR + 1] = "0100";
+[PTBR + 2] = 64;
+[PTBR + 3] = "0100";
+
+[PTBR + 4] = 78;
+[PTBR + 5] = "0110";
+[PTBR + 6] = 79;
+[PTBR + 7] = "0110";
+
+[PTBR + 8] = 65;
+[PTBR + 9] = "0100";
+[PTBR + 10] = 66;
+[PTBR + 11] = "0100";
+[PTBR + 12] = -1;
+[PTBR + 13] = "0000";
+[PTBR + 14] = -1;
+[PTBR + 15] = "0000";
+
+[PTBR + 16] = 76;
+[PTBR + 17] = "0110";
+[PTBR + 18] = 77;
+[PTBR + 19] = "0110";
+
+[76 * 512] = [65 * 512 + 1];
+
+//Page table for exec
+PTBR = PAGE_TABLE_BASE + 40;
+PTLR = 10;
+[PTBR + 0] = 63;
+[PTBR + 1] = "0100";
+[PTBR + 2] = 64;
+[PTBR + 3] = "0100";
+
+[PTBR + 4] = 84;
+[PTBR + 5] = "0110";
+[PTBR + 6] = 85;
+[PTBR + 7] = "0110";
+
+[PTBR + 8] = 83;
+[PTBR + 9] = "0100";
+[PTBR + 10] = -1;
+[PTBR + 11] = "0000";
+[PTBR + 12] = -1;
+[PTBR + 13] = "0000";
+[PTBR + 14] = -1;
+[PTBR + 15] = "0000";
+
+[PTBR + 16] = 86;
+[PTBR + 17] = "0110";
+[PTBR + 18] = 87;
+[PTBR + 19] = "0110";
+
+[86 * 512] = [83 * 512 + 1];
+
+alias initptr R0;
+initptr = 8 * 512;
+
+//Process table for init
+[PROCESS_TABLE + 17] = 1;
+[PROCESS_TABLE + 20] = CREATED;
+[PROCESS_TABLE + 27] = 80;
+[PROCESS_TABLE + 28] = 0;
+[PROCESS_TABLE + 29] = initptr;
+[PROCESS_TABLE + 30] = PAGE_TABLE_BASE + 20; 
+[PROCESS_TABLE + 31] = PTLR;
+
+//Proecss table for execv
+initptr = PROCESS_TABLE + (2 * 16);
+
+[initptr + 1] = 2;
+[initptr + 4] = CREATED;
+[initptr + 11] = 88;
+[initptr + 12] = 0;
+[initptr + 13] = (8 * 512);
+[initptr + 14] = PAGE_TABLE_BASE + 40;
+[initptr + 15] = PTLR;
+
+
+//Setting other states of Process Table to Terminated
+alias i R1;
+i=3;
+while(i<16) do
+    initptr = PROCESS_TABLE + (i * 16);
+    [initptr + 4] = TERMINATED;
+    i = i + 1;
+endwhile;
+
+return;
