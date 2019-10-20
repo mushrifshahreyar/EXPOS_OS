@@ -39,19 +39,17 @@ if(fileDesc != -1) then
         call MOD_0;
         mod_ret = R0;
     multipop(R0,R1,R2,R3,R4,R5);
-    breakpoint;
     if(mod_ret == -1) then
         [retAddr] = -1;
         SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 13];
         [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 0;
         ireturn;
     endif;
-    breakpoint;
+    
     alias lseek R6;
     lseek = [OPEN_FILE_TABLE + (open_file * 4) + 2];
     alias physicalAddr R7;
     physicalAddr = [([PTBR + 2 *((userSP - 3)/512)] * 512) + ((userSP - 3) % 512)];
-    breakpoint;
     if([OPEN_FILE_TABLE + (open_file * 4) + 0] == INODE_ROOT) then
         if(lseek == 480) then
             multipush(R0,R1,R2,R3,R4,R5,R6,R7);
@@ -69,7 +67,7 @@ if(fileDesc != -1) then
         newword = ([PTBR + 2 * (physicalAddr/512)] * 512) + (physicalAddr % 512);
         [newword] = [ROOT_FILE + lseek];
         [OPEN_FILE_TABLE + (open_file * 4) + 2] = [OPEN_FILE_TABLE + (open_file * 4) + 2] + 1;
-        breakpoint;
+        
     else
         if(lseek == [INODE_TABLE + (inode_index * 16) + 2]) then
             multipush(R0,R1,R2,R3,R4,R5,R6,R7);
@@ -83,7 +81,7 @@ if(fileDesc != -1) then
             [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 0;
             ireturn;
         endif;
-        breakpoint;
+        
         //calling buffer read
         multipush(R0,R1,R2,R3,R4,R5,R6,R7);
             R1 = 2;
@@ -102,7 +100,7 @@ if(fileDesc != -1) then
         R3 = inode_index;
         call MOD_0;
     multipop(R0,R1,R2,R3,R4,R5,R6,R7);
-    breakpoint;
+    
     [retAddr] = 0;
 
 else

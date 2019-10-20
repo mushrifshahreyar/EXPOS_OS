@@ -12,6 +12,9 @@ int main() {
         else
             while(ret != -2) do
                 ret = exposcall("Read",fileID,word);
+                if(ret == -2) then
+                    break;
+                endif;
                 temp = exposcall("Write",-2,word);
             endwhile;
 

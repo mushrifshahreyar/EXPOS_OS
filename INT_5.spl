@@ -32,7 +32,7 @@ if(syscall == 2) then
         SP = [pcb + 13];
         ireturn;
     endif;
-    breakpoint;
+    
     alias module_ret R10;
     multipush(R0,R1,R2,R3,R4,R5);
         R1 = 3;
@@ -46,7 +46,6 @@ if(syscall == 2) then
         SP = [pcb + 13];
         ireturn;
     endif;
-    breakpoint;
     [resource_table + (i * 2) + 0] = 0;
     [resource_table + (i * 2) + 1] = module_ret;
 
