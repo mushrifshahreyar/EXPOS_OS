@@ -38,6 +38,31 @@ if(R1 == 2) then
     
     return;
 endif;
+if(R1 == 3) then
+    alias i R2;
+    i = DISK_FREE_AREA;
+    while(i < DISK_SWAP_AREA) do
+        if([DISK_FREE_LIST + i] == 0) then
+            break;
+        endif;
+        i = i + 1;
+    endwhile;
+
+    if(i == DISK_SWAP_AREA) then
+        R0 = -1;
+        return;
+    endif;
+
+    [DISK_FREE_LIST + i] = 1;
+    R0 = i;
+    return;
+    
+endif;
+
+if(R1 == 4) then
+    [DISK_FREE_LIST + R2] = [DISK_FREE_LIST + R2] - 1;
+    return;
+endif;
 
 if(R1 == 5) then
     alias blockno R2;
@@ -112,9 +137,5 @@ if(R1 == 5) then
 
 endif;
 
-if(R1 == 4) then
-    [DISK_FREE_LIST + R2] = [DISK_FREE_LIST + R2] - 1;
-    return;
-endif;
 R0 = -1;
 return;

@@ -1,0 +1,21 @@
+int main()
+{
+  decl
+    int i,temp,filedis;
+    string filename;
+  enddecl
+
+  begin
+    i=0;
+    filedis=exposcall("Open","root");
+    while(i<60) do
+      temp=exposcall("Read",filedis,filename);
+      if(filename!="-1") then
+        temp=exposcall("Write",-2,filename);
+      endif;
+      temp=exposcall("Seek",filedis,7);
+      i=i+1;
+    endwhile;
+    return 0;
+  end
+}

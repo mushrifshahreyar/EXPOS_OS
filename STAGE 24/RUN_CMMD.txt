@@ -1,0 +1,25 @@
+load --os /shortpath/OS_STARTUP.xsm
+load --module 7 /shortpath/BOOT_MODULE.xsm
+load --idle /shortpath/IDLE.xsm
+load --init /shortpath/INIT2_0.xsm
+load --module 0 /shortpath/RESOURCE_MANAGER_MODULE.xsm
+load --module 1 /shortpath/PROCESS_MANAGER_MODULE.xsm
+load --module 2 /shortpath/MEMORY_MANAGER_MODULE.xsm
+load --module 3 /shortpath/FILE_MANAGER_MODULE.xsm
+load --module 4 /shortpath/DEVICE_MANAGER_MODULE.xsm
+load --module 5 /shortpath/SCHEDULER.xsm
+load --int=4 /shortpath/INT_4.xsm
+load --int=5 /shortpath/INT_5.xsm
+load --int=6 /shortpath/INT_6.xsm
+load --int=7 /shortpath/INT_7.xsm
+load --int=8 /shortpath/INT_8.xsm
+load --int=9 /shortpath/INT_9.xsm
+load --int=10 /shortpath/INT_10.xsm
+load --int=11 /shortpath/INT_11.xsm
+load --int=13 /shortpath/INT_13.xsm
+load --int=14 /shortpath/INT_14.xsm
+load --int=15 /shortpath/INT_15.xsm
+load --int=timer /shortpath/TIMER_INT.xsm
+load --int=console /shortpath/CONSOLE_INT.xsm
+load --int=disk /shortpath/DISK_INT.xsm
+load --exhandler /shortpath/EXCEPTION_HANDLER.xsm
