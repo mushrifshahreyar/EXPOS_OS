@@ -112,9 +112,6 @@ loadi(49,62);
 loadi(50,63);
 loadi(51,64);
 
-//Loading even.xsm
-loadi(83,71);
-
 //Loading Disk Free list
 loadi(61,2);
 
