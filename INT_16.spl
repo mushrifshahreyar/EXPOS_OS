@@ -1,0 +1,189 @@
+alias userSP R0;
+alias sys_call R1;
+alias pcb R2;
+alias retAddr R3;
+userSP = SP;
+pcb = PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16);
+retAddr = ([PTBR + 2 * ((userSP - 1)/512)] * 512) + ((userSP - 1) % 512);
+sys_call = [([PTBR + 2 * ((userSP - 5)/512)] * 512) + ((userSP - 5) % 512)];
+[pcb + 9] = sys_call;
+[pcb + 13] = SP;
+
+SP = [pcb + 11] * 512 - 1;
+
+
+//Newusr
+if(sys_call == 22) then
+    alias username R4;
+    alias password R5;
+    username = [([PTBR + 2 * ((userSP - 4)/512)] * 512) + ((userSP - 4) % 512)];
+    password = [([PTBR + 2 * ((userSP - 3)/512)] * 512) + ((userSP - 3) % 512)];
+    if([SYSTEM_STATUS_TABLE + 1] != 1 && [SYSTEM_STATUS_TABLE + 1] != 2) then
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        [retAddr] = -1;
+        ireturn;
+    endif;
+
+    alias i R10;
+    i = 0;
+    while(i < 16) do
+        if([USER_TABLE + (i * 2) + 0] == -1) then
+            break;
+        endif;
+        i = i + 1;
+    endwhile;
+
+    if(i == 16) then
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        [retAddr] = -3;
+        ireturn;
+    endif;
+
+    encrypt password;
+    [USER_TABLE + (i * 2) + 0] = username;
+    [USER_TABLE + (i * 2) + 1] = password;
+    
+    [retAddr] = 0;
+endif;
+
+if(sys_call == 23) then
+    alias username R4;
+    username = [([PTBR + 2 * ((userSP - 4)/512)] * 512) + ((userSP - 4) % 512)];
+    if(username == "root" && username == "kernel") then
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        [retAddr] = -2;
+        ireturn;
+    endif;
+
+    if([SYSTEM_STATUS_TABLE + 1] != 1 && [SYSTEM_STATUS_TABLE + 1] != 2) then
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        [retAddr] = -1;
+        ireturn;
+    endif;
+
+    alias i R10;
+    i = 0;
+    while(i < 16) do
+        if([USER_TABLE + (i * 2) + 0] == username) then
+            break;
+        endif;
+        i = i + 1;
+    endwhile;
+
+    if(i == 16) then
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        [retAddr] = -1;
+        ireturn;
+    endif;
+
+    alias j R11;
+    j = 0;
+    while(j < 60) do
+        if([ROOT_FILE + (j * 8) + 3] == username) then
+            break;
+        endif;
+        j = j + 1;
+    endwhile;
+
+    if(j != 60) then
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        [retAddr] = -3;
+        ireturn;
+    endif;
+
+    [USER_TABLE + (i * 2) + 0] = -1;
+    [USER_TABLE + (i * 2) + 1] = -1;
+
+    [retAddr] = 0;
+
+endif;
+if(sys_call == 24) then
+
+    alias username R4;
+    alias password R5;
+    username = [([PTBR + 2 * ((userSP - 4)/512)] * 512) + ((userSP - 4) % 512)];
+    password = [([PTBR + 2 * ((userSP - 3)/512)] * 512) + ((userSP - 3) % 512)];
+
+    if([SYSTEM_STATUS_TABLE + 1] != 1 && [SYSTEM_STATUS_TABLE + 1] != 2) then
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        [retAddr] = -1;
+        ireturn;
+    endif;
+
+    alias i R10;
+    i = 0;
+    while(i < 16) do
+        if([USER_TABLE + (i * 2) + 0] == username) then
+            break;
+        endif;
+        i = i + 1;
+    endwhile;
+
+    if(i == 16) then
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        [retAddr] = -2;
+        ireturn;
+    endif;
+
+    if([pcb + 3] != i) then
+        if([pcb + 3] != 1) then
+            SP = [pcb + 13];
+            [pcb + 9] = 0;
+            [retAddr] = -1;
+            ireturn;
+        endif;
+    endif;
+
+    encrypt password;
+    
+    [USER_TABLE + (i * 2) + 1] = password;
+
+    [retAddr] = 0;
+
+endif;
+
+if(sys_call == 25) then
+    alias userid R4;
+    userid = [([PTBR + 2 * ((userSP - 4)/512)] * 512) + ((userSP - 4) % 512)];
+    if(userid < 0 && userid > 15) then
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        [retAddr] = -1;
+        ireturn;
+    endif;
+    [retAddr] = [USER_TABLE + (userid * 2) + 0];
+endif;
+
+if(sys_call == 26) then
+    alias username R4;
+    username = [([PTBR + 2 * ((userSP - 4)/512)] * 512) + ((userSP - 4) % 512)];
+    
+    alias i R10;
+    i = 0;
+    while(i < 16) do
+        if([USER_TABLE + (i * 2) + 0] == username) then
+            break;
+        endif;
+        i = i + 1;
+    endwhile;
+    if(i == 16) then
+        SP = [pcb + 13];
+        [pcb + 9] = 0;
+        [retAddr] = -1;
+        ireturn;
+    else
+        [retAddr] = i;
+    endif;
+endif;
+
+SP = [pcb + 13];
+[pcb + 9] = 0;
+ireturn;

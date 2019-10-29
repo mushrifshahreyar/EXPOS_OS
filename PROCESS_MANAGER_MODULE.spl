@@ -146,7 +146,7 @@ if(R1 == 5) then
         endif;  
         i = i + 1;
     endwhile;
-    breakpoint;
+    
     i = 2;
     while(i < 16) do
         if((i != pid) && ([PROCESS_TABLE + (i * 16) + 4] != TERMINATED)) then
@@ -158,7 +158,7 @@ if(R1 == 5) then
         endif;
         i = i + 1;
     endwhile;
-    breakpoint;
+    
     i = 0;
     while(i < 60) do
         if([INODE_TABLE + (i * 16) + 1] != -1) then
