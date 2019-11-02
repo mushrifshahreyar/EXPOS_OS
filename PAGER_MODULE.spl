@@ -1,0 +1,139 @@
+alias functionno R1;
+alias pid R2;
+alias ret R0;
+
+if(functionno == 1) then
+    alias i R10;
+    i = 3;
+    while(i < 15) do
+        if([PROCESS_TABLE + (i * 16) + 4] == WAIT_PROCESS) then
+            break;
+        endif;
+        i = i + 1;
+    endwhile;
+    if(i == 15) then
+        i = 3;
+        while(i < 15) do
+            if([PROCESS_TABLE + (i * 16) + 4] == WAIT_SEMAPHORE) then
+                break;
+            endif;
+            i = i + 1;
+        endwhile;
+    endif;
+    alias max R11;
+    alias curr R12;
+    alias swap_pid R13;
+    swap_pid = -1;
+    max = -1;
+    curr = -1;
+    if(i == 15) then
+        i = 3;
+        while(i < 15) do
+            curr = [PROCESS_TABLE + (i * 16) + 0];
+            if(curr > max) then
+                swap_pid = i;
+                max = curr;
+            endif;
+            i = i + 1;
+        endwhile;
+    endif;
+    i = swap_pid;
+    [PROCESS_TABLE + (i * 16) + 0] = 0;
+    alias ptbr R4;
+    alias dmt R5;
+
+    ptbr = [PROCESS_TABLE + (i * 16) + 14];
+    alias j R14;
+    alias page R15;
+    
+    dmt = DISK_MAP_TABLE + (i * 10);
+    j = 2;
+
+    while(j < 10) do
+        page = [ptbr + (j * 2)];
+        if(page != -1) then
+            if(j == 2 || j == 3 || j == 8 || j == 9) then
+                multipush(R1,R2,R4,R5,R10,R14,R15);
+                    R1 = 6;
+                    call MOD_2;
+                    R16 = R0;
+                multipop(R1,R2,R4,R5,R10,R14,R15);
+            endif;
+            
+            //Heap pages
+            if(j <= 3) then
+                if([MEMORY_FREE_LIST + page] == 1) then
+                    [dmt + j] = R16;
+                    multipush(R1,R2,R4,R5,R10,R14,R15);
+                        R1 = 2;
+                        R2 = page;
+                        call MOD_2;
+
+                        R1 = 1;
+                        R2 = pid;
+                        R3 = page;
+                        R4 = R16;
+                        call MOD_4;
+                    multipop(R1,R2,R4,R5,R10,R14,R15);
+                    [ptbr + (j * 2)] = -1;
+                endif;
+            endif;
+            if(j > 3 && j <= 7) then
+                multipush(R1,R2,R10,R14);
+                    R1 = 2;
+                    R2 = page;
+                    call MOD_2;
+                multipop(R1,R2,R10,R14);
+                [ptbr + (j * 2)] = -1;
+            endif;
+            if(j > 7 && j <= 9) then
+                [dmt + j] = R16;
+                multipush(R1,R2,R4,R5,R10,R14,R15);
+                    R1 = 2;
+                    R2 = page;
+                    call MOD_2;
+
+                    R1 = 1;
+                    R2 = pid;
+                    R3 = page;
+                    R4 = R16;
+                    call MOD_4;
+                multipop(R1,R2,R4,R5,R10,R14,R15);
+                [ptbr + (j * 2)] = -1;
+            endif;
+        endif;
+        j = j + 1;
+    endwhile;
+    [PROCESS_TABLE + (i * 16) + 6] = 1;
+
+    [SYSTEM_STATUS_TABLE + 4] = [SYSTEM_STATUS_TABLE + 4] + 1;
+    [SYSTEM_STATUS_TABLE + 5] = 0;
+
+    return;
+endif;
+
+if(R1 == 2) then
+    alias i R10;
+    alias curr R11;
+    alias max R12;
+    alias swap_pid R13;
+    alias pcb R3;
+    i = 3;
+    curr = -1;
+    max = -1;
+    swap_pid = -1;
+    while(i < 15) do
+        pcb = PROCESS_TABLE + (i * 16);
+        if([pcb + 4] == READY && [pcb + 6] == 1) then
+            curr = [pcb + 0];
+            if(curr > max) then
+                max = curr;
+                swap_pid = -1;
+            endif;
+        endif;
+        i = i + 1;
+    endwhile;
+    if(swap_pid == -1) then
+        return; 
+    endif;
+endif;

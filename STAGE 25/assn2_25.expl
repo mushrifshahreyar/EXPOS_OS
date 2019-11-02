@@ -1,0 +1,32 @@
+int main()
+{
+decl
+int temp,a,b,desc;
+string file;
+enddecl
+
+begin
+	temp=exposcall("Read",-1,file);
+	desc=exposcall("Open",file);
+	a=2000;
+	temp=exposcall("Seek",desc,2000);
+	while(a<2514) do
+		temp=exposcall("Write",desc,a);
+		a=a+1;
+	endwhile;
+	a=0;	
+	temp=exposcall("Seek",desc,2048);	//set lseek at eof
+	temp=exposcall("Seek",desc,-1);	
+	while(a==0) do
+		temp=exposcall("Read",desc,b);
+		temp=exposcall("Write",-2,b);
+		a=exposcall("Seek",desc,-2);
+		if(a!=0) then
+			break;
+		endif;
+	endwhile;
+
+	temp=exposcall("Close",desc);
+	return 0;
+end
+}

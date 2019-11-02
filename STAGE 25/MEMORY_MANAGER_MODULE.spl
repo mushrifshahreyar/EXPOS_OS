@@ -134,22 +134,7 @@ if(R1 == 5) then
         endif;
         return;
     endif;
-endif;
 
-if(R1 == 6) then
-    alias i R10;
-    i = DISK_SWAP_AREA;
-    while(i < DISK_SIZE) do
-        if([DISK_FREE_LIST + i] == -1)
-            R0 = i;
-            return;
-        endif;
-        i = i + 1;
-    endwhile;
-    
-    
-    
-    return;
 endif;
 
 R0 = -1;

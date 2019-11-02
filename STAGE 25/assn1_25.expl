@@ -1,0 +1,27 @@
+int main() {
+    decl
+        int temp,ret,fileID,i;
+        str filename;
+    enddecl
+
+    begin
+        i = 0;
+        temp = exposcall("Read",-1,filename);
+        temp = exposcall("Create",filename,1);
+        fileID = exposcall("Open",filename);
+        while(i < 10) do
+            temp = exposcall("Write",fileID,i);
+            
+            if(temp != 0) then
+                temp = exposcall("Write",-2,"Error");
+            endif;
+            i = i + 1;
+        endwhile;
+        
+        temp = exposcall("Close",fileID);
+        
+
+        return 0;
+    end
+
+}

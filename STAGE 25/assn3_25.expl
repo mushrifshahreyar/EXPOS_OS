@@ -1,0 +1,77 @@
+int main()
+{
+decl
+    int temp, x, a, pidone, pidtwo, semid, iter, data, permission, fd, j, temp2;
+    string filename;
+enddecl
+
+begin
+    temp=exposcall("Read",-1,filename);
+    temp=exposcall("Read",-1,permission);
+    temp=exposcall("Create",filename, permission);
+
+    pidone = exposcall("Fork");
+    if (pidone != 0 ) then
+        fd=exposcall("Open",filename);
+        iter=1;
+        while(iter <= 100) do
+            a=exposcall("Read",fd, data);
+            if(a!=-2) then
+                temp=exposcall("Write",-2, data);
+                iter=iter+1;
+            endif;
+        endwhile;
+    else
+        semid = exposcall("Semget");
+        fd=exposcall("Open",filename);
+
+        pidtwo =  exposcall("Fork");
+        if(pidtwo == 0) then
+            iter = 1;
+            temp = exposcall("SemLock", semid);
+            while(iter <= 100) do
+                
+                temp=exposcall("Write",fd, iter);
+                
+                iter=iter+2;
+            endwhile;
+            temp = exposcall("SemUnLock", semid);
+        else
+            iter = 2;
+            temp = exposcall("SemLock", semid);
+            while(iter <= 100) do
+                
+                temp=exposcall("Write",fd, iter);
+                
+                iter=iter+2;
+            endwhile;
+            temp = exposcall("SemUnLock", semid);
+            iter = 2;
+            temp2 = 0;
+            j = 2;
+            temp = exposcall("SemLock", semid);
+            while(iter <= 100) do
+                j=2;
+                temp2 = 0;
+                while(j < iter) do 
+                    if((iter % j) == 0) then
+                        temp2 = 1;
+                        break;
+                    endif;
+                    j = j + 1;
+                endwhile;
+                if(temp2 == 0) then
+                    temp = exposcall("Write",fd,iter);
+                endif;
+                iter = iter + 1;
+            endwhile;
+
+            temp = exposcall("SemUnLock", semid);
+        endif;
+        
+        temp = exposcall("Semrelease", semid);
+    endif;
+    
+    return 0;
+end
+}

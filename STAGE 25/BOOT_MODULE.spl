@@ -1,0 +1,309 @@
+//USED PAGES
+//76,77,78,79,80
+
+//Loading Inode
+loadi(59,3);
+loadi(60,4);
+
+//Loading INIT/LOGIN
+loadi(65,7);
+
+//Loading SHELL
+loadi(67,9);
+loadi(68,10);
+
+//Loading INT4
+loadi(10,23);
+loadi(11,24);
+
+//Loading INT5
+loadi(12,25);
+loadi(13,26);
+
+//Loading INT6
+loadi(14,27);
+loadi(15,28);
+
+//Loading INT7
+loadi(16,29);
+loadi(17,30);
+
+//Loading INT8
+loadi(18,31);
+loadi(19,32);
+
+//Loading INT9
+loadi(20,33);
+loadi(21,34);
+
+//Loading INT10
+loadi(22,35);
+loadi(23,36);
+
+//Loading INT11
+loadi(24,37);
+loadi(25,38);
+
+//Loading INT12
+loadi(26,39);
+loadi(27,40);
+
+//Loading INT13
+loadi(28,41);
+loadi(29,42);
+
+//Loading INT14
+loadi(30,43);
+loadi(31,44);
+
+//Loading INT15
+loadi(32,45);
+loadi(33,46);
+
+//Loading INT16
+loadi(34,47);
+loadi(35,48);
+
+//Loading INT17
+loadi(36,49);
+loadi(37,50);
+
+//Loading exception handler
+loadi(2,15);
+loadi(3,16);
+
+//Loading Library
+loadi(63,13);
+loadi(64,14);
+
+//Loading timer interrupt
+loadi(4,17);
+loadi(5,18);
+
+//Loading Disk interrupt
+loadi(6,19);
+loadi(7,20);
+
+//Loading Console interrupt
+loadi(8,21);
+loadi(9,22);
+
+//Loading Resource Module
+loadi(40,53);
+loadi(41,54);
+
+//Loading Process Module
+loadi(42,55);
+loadi(43,56);
+
+//Loading Memory Module
+loadi(44,57);
+loadi(45,58);
+
+//Loading File Module
+loadi(46,59);
+loadi(47,60);
+
+//Loading Device Module
+loadi(48,61);
+loadi(49,62);
+
+//Loading Scheduler
+loadi(50,63);
+loadi(51,64);
+
+//Loading Disk Free list
+loadi(61,2);
+
+//Loading Inode table/User table
+loadi(59,3);
+loadi(60,4);
+
+//Loading Root file table
+loadi(62,5);
+
+//Pagetable for init
+PTBR = PAGE_TABLE_BASE + 20;
+PTLR = 10;
+
+[PTBR + 0] = 63;
+[PTBR + 1] = "0100";
+[PTBR + 2] = 64;
+[PTBR + 3] = "0100";
+
+[PTBR + 4] = -1;
+[PTBR + 5] = "0000";
+[PTBR + 6] = -1;
+[PTBR + 7] = "0000";
+
+[PTBR + 8] = 65;
+[PTBR + 9] = "0100";
+[PTBR + 10] = -1;
+[PTBR + 11] = "0000";
+[PTBR + 12] = -1;
+[PTBR + 13] = "0000";
+[PTBR + 14] = -1;
+[PTBR + 15] = "0000";
+
+[PTBR + 16] = 66;
+[PTBR + 17] = "0110";
+[PTBR + 18] = -1;
+[PTBR + 19] = "0110";
+
+[66 * 512] = [65 * 512 + 1];
+
+alias initptr R0;
+initptr = 8 * 512;
+
+//Process table for init
+[PROCESS_TABLE + 17] = 1;
+[PROCESS_TABLE + 19] = 1;
+[PROCESS_TABLE + 20] = CREATED;
+[PROCESS_TABLE + 27] = 77;
+[PROCESS_TABLE + 28] = 0;
+[PROCESS_TABLE + 29] = initptr;
+[PROCESS_TABLE + 30] = PAGE_TABLE_BASE + 20; 
+[PROCESS_TABLE + 31] = PTLR;
+
+//Pagetable for Shell
+alias ptbr R3;
+ptbr = PAGE_TABLE_BASE + 40;
+PTLR = 10;
+
+[ptbr + 0] = 63;
+[ptbr + 1] = "0100";
+[ptbr + 2] = 64;
+[ptbr + 3] = "0100";
+
+[ptbr + 4] = -1;
+[ptbr + 5] = "0000";
+[ptbr + 6] = -1;
+[ptbr + 7] = "0000";
+
+[ptbr + 8] = 67;
+[ptbr + 9] = "0100";
+[ptbr + 10] = 68;
+[ptbr + 11] = "0100";
+[ptbr + 12] = -1;
+[ptbr + 13] = "0000";
+[ptbr + 14] = -1;
+[ptbr + 15] = "0000";
+
+[ptbr + 16] = 78;
+[ptbr + 17] = "0110";
+[ptbr + 18] = 79;
+[ptbr + 19] = "0110";
+
+[78 * 512] = [67 * 512 + 1];
+alias pcb R4;
+pcb = PROCESS_TABLE + (2 * 16);
+[pcb + 0] = 0;
+[pcb + 1] = 2;
+[pcb + 2] = 1;
+[pcb + 4] = TERMINATED;
+[pcb + 11] = 80;
+[pcb + 12] = 0;
+[pcb + 13] = 8 * 512;
+[pcb + 14] = ptbr;
+[pcb + 15] = PTLR;
+
+alias i R1;
+alias dmt R5;
+dmt = DISK_MAP_TABLE + (2 * 10);
+i = 0;
+while(i < 10) do
+    [dmt + i] = -1;
+    i = i + 1;
+endwhile;
+[dmt + 4] = 9;
+[dmt + 5] = 10;
+
+
+alias per_process_table R2;
+per_process_table = [PROCESS_TABLE + 27] * 512 + 495;
+i = 0;
+while(i<16) do
+    [77 * 512 + 495 + i] = -1;
+    [80 * 512 + 495 + i] = -1;
+    
+    i = i + 1;
+endwhile;
+
+//Setting other states of Process Table to Terminated
+
+i=2;
+while(i<16) do
+    initptr = PROCESS_TABLE + (i * 16);
+    [initptr + 4] = TERMINATED;
+    i = i + 1;
+endwhile;
+
+//Initialising disk status and terminal status
+
+[TERMINAL_STATUS_TABLE + 0] = 0;
+[DISK_STATUS_TABLE + 0] = 0;
+
+i = 0;
+while(i <= 128) do
+    if(i <= 80) then
+        [MEMORY_FREE_LIST + i] = 1;
+    else
+        [MEMORY_FREE_LIST + i] = 0;
+    endif;
+    i = i + 1;
+endwhile;
+
+[SYSTEM_STATUS_TABLE + 2] = 47;
+[SYSTEM_STATUS_TABLE + 3] = 0;
+
+//Initialising disk map table
+//i = 1;
+//alias k R12;
+//while(i <16) do
+//    k = 0;
+//    while(k < 10) do
+//        [DISK_MAP_TABLE + (i * 10) + k] = -1;
+//        k = k + 1;
+//   endwhile;   
+//    i = i + 1;
+//endwhile;
+
+alias sem_table R6;
+i = 0;
+while(i < 32) do
+    sem_table = SEMAPHORE_TABLE + (i * 4);
+    [sem_table + 0] = -1;
+    [sem_table + 1] = 0;
+    i = i + 1;
+endwhile;
+
+i = 0;
+while(i < 60) do
+    sem_table = FILE_STATUS_TABLE
+     + (i * 4);
+    [sem_table + 0] = -1;
+    [sem_table + 1] = -1;
+    i = i + 1;
+endwhile;
+
+i = 0;
+while(i < 32) do
+    sem_table = OPEN_FILE_TABLE + (i * 4);
+    [sem_table + 0] = -1;
+    [sem_table + 1] = -1;
+    [sem_table + 2] = 0;
+    
+    i = i + 1;
+endwhile;
+
+i = 0;
+while(i < MAX_BUFFER) do
+    sem_table = BUFFER_TABLE + (i * 4);
+    [sem_table + 0] = -1;
+    [sem_table + 1] = 0;
+    [sem_table + 2] = -1;
+    [sem_table + 3] = -1;
+
+    i = i + 1;
+endwhile;
+return;
