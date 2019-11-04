@@ -3,23 +3,27 @@ SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;
 
 backup;
 
+alias i R10;
+
 if([SYSTEM_STATUS_TABLE + 5] != 0) then
     //Calling of swapin or swapout
-    if([SYSTEM_STATUS_TABLE + 1] == 15 && [SYSTEM_STATUS_TABLE + 5] == SWAP_IN) then
+    
+    if([SYSTEM_STATUS_TABLE + 1] == 15 && [SYSTEM_STATUS_TABLE + 5] == SWAP_OUT) then
+        //swapout
         R1 = 1;
         R2 = [SYSTEM_STATUS_TABLE + 1];
         call MOD_6;
     endif;
-
-    if([SYSTEM_STATUS_TABLE + 1] == 15 && [SYSTEM_STATUS_TABLE + 5] == SWAP_OUT) then
-        //swapout
+    
+    if([SYSTEM_STATUS_TABLE + 1] == 15 && [SYSTEM_STATUS_TABLE + 5] == SWAP_IN) then
         R1 = 2;
         R2 = [SYSTEM_STATUS_TABLE + 1];
         call MOD_6;
     endif;
-
+    
     if([SYSTEM_STATUS_TABLE + 1] == 0) then
         //nothing doing
+        i=0;
     endif;
 else
     if([SYSTEM_STATUS_TABLE + 2] < MEM_LOW) then
@@ -27,19 +31,19 @@ else
 
     else 
         if([SYSTEM_STATUS_TABLE + 4] > 0) then
-            
+            i = 3;
+            while(i < 15) do
+                if(([PROCESS_TABLE + (i * 16) + 6] == 1 && [PROCESS_TABLE + (i * 16) + 0] > MAX_TICK) || ([SYSTEM_STATUS_TABLE + 2] > MEM_HIGH)) then
+                    [SYSTEM_STATUS_TABLE + 5] = SWAP_IN;
+                endif;
+                i = i + 1;
+            endwhile;
 
         endif;
     endif;
-
-
-
-
-
-    
 endif;
 
-alias i R10;
+
 i = 0;
 //Modification---
 while(i < 16) do

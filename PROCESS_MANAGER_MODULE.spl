@@ -25,47 +25,58 @@ endif;
 
 if(R1 == 2) then
 
+    alias pid R2;
+    R15 = R2;
     alias per_process_table R10;
-    per_process_table = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 + 495;
+    per_process_table = [PROCESS_TABLE + (pid * 16) + 11] * 512 + 495;
     alias i R11;
     i = 0;
+    
     while(i < 8) do
         if([per_process_table + (i * 2) + 0] == 1) then
-            multipush(R0,R1,R2,R3,R10,R11);
+            multipush(R0,R1,R2,R3,R10,R11,R15);
                 R1 = 7;
                 R2 = [SYSTEM_STATUS_TABLE + 1];
                 R3 = [per_process_table + (i * 2) + 1];
                 call MOD_0;
-            multipop(R0,R1,R2,R3,R4,R10,R11);        
+            multipop(R0,R1,R2,R3,R10,R11,R15);        
         endif;  
 
         if([per_process_table + (i * 2) + 0] == 0) then
-            multipush(R0,R1,R2,R3,R10,R11);
+            multipush(R0,R1,R2,R3,R10,R11,R15);
                 R1 = 4;
                 R2 = [per_process_table + (i * 2) + 1];
                 call MOD_3;
-            multipop(R0,R1,R2,R3,R10,R11);        
+            multipop(R0,R1,R2,R3,R10,R11,R15);        
         endif;    
         i = i + 1;
+        
     endwhile;
-
+    
+    R15 = pid;
     multipush(R0,R1,R2,R3,R10,R11);
     R1 = 2;
-    R2 = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11];
+    R2 = [PROCESS_TABLE + (R15 * 16) + 11];
     call MOD_2;
     multipop(R0,R1,R2,R3,R10,R11);
-return;
+
+    return;
 endif;
 
 if(R1 == 3) then
+
     multipush(R0,R1,R2,R3,R4);
     alias pid R2;
     R1 = 4;
     call MOD_1;
-    
+    multipop(R0,R1,R2,R3,R4);
+    R10 = R2;
+    multipush(R0,R1,R2,R3,R4);
     R1 = 2;
+    R2 = R10;
     call MOD_1;
     multipop(R0,R1,R2,R3,R4);
+    
     alias pcb R11;
     if([PROCESS_TABLE + (pid * 16) + 9] != 9) then
         alias i R10;
@@ -84,26 +95,28 @@ if(R1 == 3) then
 endif;
 
 if(R1 == 4) then
-    multipush(R0,R1,R2,R3,R4);
     alias i R3;
-    [PTBR + 0] = -1;
-    [PTBR + 1] = "0000";
-    [PTBR + 2] = -1;
-    [PTBR + 3] = "0000";
+    alias ptbr R4;
+    ptbr = PAGE_TABLE_BASE + (R2 * 20);
+    [ptbr + 0] = -1;
+    [ptbr + 1] = "0000";
+    [ptbr + 2] = -1;
+    [ptbr + 3] = "0000";
     i = 4;
     while(i<19) do
-        [PTBR + i + 1] = "0000";
-        if([PTBR + i] != -1) then
-            multipush(R3);
-            R2 = [PTBR + i];
+        [ptbr + i + 1] = "0000";
+        if([ptbr + i] != -1) then
+            multipush(R2,R3,R4);
+            R2 = [ptbr + i];
             R1 = 2;
             call MOD_2;
-            multipop(R3);
+            multipop(R2,R3,R4);
         endif;
-        [PTBR + i] = -1;
+        [ptbr + i] = -1;
         i = i + 2;
     endwhile;
-    alias pid R2;
+    alias pid R10;
+    pid = R2;
     [DISK_MAP_TABLE + 0] = -1;
     [DISK_MAP_TABLE + 1] = -1;
     alias dmt R5;
@@ -116,45 +129,46 @@ if(R1 == 4) then
             continue;
         endif;
         if([dmt + i] != -1) then
-            multipush(R0,R1,R2,R3,R4,R5);
+            multipush(R0,R1,R2,R3,R4,R5,R10);
                 R1 = 4;
                 R2 = [DISK_MAP_TABLE + (pid * 10) + i];
                 R3 = pid;
                 call MOD_2;
-            multipop(R0,R1,R2,R3,R4,R5);                
+            multipop(R0,R1,R2,R3,R4,R5,R10);                
         endif;
         [dmt + i] = -1; 
         i = i + 1;
     endwhile;
-    multipop(R0,R1,R2,R3,R4);
     
     return;
 endif;
 
 if(R1 == 5) then
     alias pid R2;
-    alias i R3;
+    alias i R10;
     i = 0;
     while(i < 60) do
         if([INODE_TABLE + (i * 16) + 1] != -1) then
-            multipush(R1,R2,R3);
+            multipush(R1,R2,R10);
                 R1 = 4;
                 R2 = [SYSTEM_STATUS_TABLE + 1];
                 R3 = i;
                 call MOD_0;
-            multipop(R1,R2,R3);
+            multipop(R1,R2,R10);
         endif;  
         i = i + 1;
     endwhile;
     
     i = 2;
+    
     while(i < 16) do
         if((i != pid) && ([PROCESS_TABLE + (i * 16) + 4] != TERMINATED)) then
-            multipush(R1,R2,R3);
+    
+            multipush(R1,R2,R10);
                 R1 = 3;
                 R2 = i;
                 call MOD_1;
-            multipop(R1,R2,R3);
+            multipop(R1,R2,R10);
         endif;
         i = i + 1;
     endwhile;
@@ -162,15 +176,15 @@ if(R1 == 5) then
     i = 0;
     while(i < 60) do
         if([INODE_TABLE + (i * 16) + 1] != -1) then
-            multipush(R1,R2,R3);
+            multipush(R1,R2,R10);
                 R1 = 5;
                 R2 = [SYSTEM_STATUS_TABLE + 1];
                 R3 = i;
                 call MOD_0;
-            multipop(R1,R2,R3);
+            multipop(R1,R2,R10);
         endif;  
         i = i + 1;
     endwhile;
-    breakpoint;
+    
     return;
 endif;

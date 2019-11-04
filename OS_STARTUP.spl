@@ -8,6 +8,48 @@ loadi(69,11);
 SP = 76 * 512 - 1;
 call BOOT_MODULE;
 
+alias ptbr R0;
+ptbr = PAGE_TABLE_BASE + (15 * 20);
+alias pcb R1;
+pcb = PROCESS_TABLE + (15 * 16);
+
+[ptbr + 0] = -1;
+[ptbr + 1] = "0000";
+[ptbr + 2] = -1;
+[ptbr + 3] = "0000";
+
+[ptbr + 4] = -1;
+[ptbr + 5] = "0000";
+[ptbr + 6] = -1;
+[ptbr + 7] = "0000";
+
+[ptbr + 8] = 69;
+[ptbr + 9] = "0100";
+[ptbr + 10] = -1;
+[ptbr + 11] = "0000";
+[ptbr + 12] = -1;
+[ptbr + 13] = "0000";
+[ptbr + 14] = -1;
+[ptbr + 15] = "0000";
+
+[ptbr + 16] = 81;
+[ptbr + 17] = "0110";
+[ptbr + 18] = -1;
+[ptbr + 19] = "0000";
+
+[81 * 512] = [69 * 512 + 1];
+
+[pcb + 0] = 0;
+[pcb + 1] = 15;
+[pcb + 3] = 0;
+[pcb + 4] = CREATED; 
+[pcb + 11] = 82;
+[pcb + 12] = 0;
+[pcb + 13] = 8 * 512;
+[pcb + 14] = ptbr;
+[pcb + 15] = 10;
+
+
 //Page table for IDLE
 
 PTBR = PAGE_TABLE_BASE;
@@ -48,5 +90,28 @@ SP = 8 * 512;
 [PROCESS_TABLE + 14] = PAGE_TABLE_BASE;
 [PROCESS_TABLE + 15] = 10;
 
+//Initialising disk map table
+//i = 1;
+//alias k R12;
+//while(i <16) do
+//    k = 0;
+//    while(k < 10) do
+//        [DISK_MAP_TABLE + (i * 10) + k] = -1;
+//        k = k + 1;
+//   endwhile;   
+//    i = i + 1;
+//endwhile;
+
+alias i R3;
+alias sem_table R6;
+i = 0;
+while(i < 32) do
+    sem_table = SEMAPHORE_TABLE + (i * 4);
+    [sem_table + 0] = -1;
+    [sem_table + 1] = 0;
+    i = i + 1;
+endwhile;
+
 [SYSTEM_STATUS_TABLE + 1] = 0;
+breakpoint;
 ireturn;

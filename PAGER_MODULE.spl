@@ -6,7 +6,7 @@ if(functionno == 1) then
     alias i R10;
     i = 3;
     while(i < 15) do
-        if([PROCESS_TABLE + (i * 16) + 4] == WAIT_PROCESS) then
+        if([PROCESS_TABLE + (i * 16) + 4] == WAIT_PROCESS && [PROCESS_TABLE + (i * 16) + 6] != 1) then
             break;
         endif;
         i = i + 1;
@@ -14,12 +14,14 @@ if(functionno == 1) then
     if(i == 15) then
         i = 3;
         while(i < 15) do
-            if([PROCESS_TABLE + (i * 16) + 4] == WAIT_SEMAPHORE) then
+            if([PROCESS_TABLE + (i * 16) + 4] == WAIT_SEMAPHORE && [PROCESS_TABLE + (i * 16) + 6] != 1) then
                 break;
             endif;
             i = i + 1;
         endwhile;
     endif;
+
+    breakpoint;
     alias max R11;
     alias curr R12;
     alias swap_pid R13;
@@ -29,55 +31,37 @@ if(functionno == 1) then
     if(i == 15) then
         i = 3;
         while(i < 15) do
-            curr = [PROCESS_TABLE + (i * 16) + 0];
-            if(curr > max) then
-                swap_pid = i;
-                max = curr;
+            if([PROCESS_TABLE + (i * 16) + 4] != RUNNING && [PROCESS_TABLE + (i * 16) + 4] != TERMINATED && [PROCESS_TABLE + (i * 16) + 6] != 1 && [PROCESS_TABLE + (i * 16) + 4] != ALLOCATED) then
+                curr = [PROCESS_TABLE + (i * 16) + 0];
+                if(curr > max) then
+                    swap_pid = i;
+                    max = curr;
+                endif;
             endif;
             i = i + 1;
         endwhile;
+        i = swap_pid;
     endif;
-    i = swap_pid;
+    
+    if(i == 15) then
+        [SYSTEM_STATUS_TABLE + 5] = 0;
+        return;
+    endif;
+
     [PROCESS_TABLE + (i * 16) + 0] = 0;
     alias ptbr R4;
-    alias dmt R5;
-
+    
+    breakpoint;
     ptbr = [PROCESS_TABLE + (i * 16) + 14];
     alias j R14;
     alias page R15;
     
-    dmt = DISK_MAP_TABLE + (i * 10);
     j = 2;
-
+    R7 = pid;
+    breakpoint;
     while(j < 10) do
         page = [ptbr + (j * 2)];
         if(page != -1) then
-            if(j == 2 || j == 3 || j == 8 || j == 9) then
-                multipush(R1,R2,R4,R5,R10,R14,R15);
-                    R1 = 6;
-                    call MOD_2;
-                    R16 = R0;
-                multipop(R1,R2,R4,R5,R10,R14,R15);
-            endif;
-            
-            //Heap pages
-            if(j <= 3) then
-                if([MEMORY_FREE_LIST + page] == 1) then
-                    [dmt + j] = R16;
-                    multipush(R1,R2,R4,R5,R10,R14,R15);
-                        R1 = 2;
-                        R2 = page;
-                        call MOD_2;
-
-                        R1 = 1;
-                        R2 = pid;
-                        R3 = page;
-                        R4 = R16;
-                        call MOD_4;
-                    multipop(R1,R2,R4,R5,R10,R14,R15);
-                    [ptbr + (j * 2)] = -1;
-                endif;
-            endif;
             if(j > 3 && j <= 7) then
                 multipush(R1,R2,R10,R14);
                     R1 = 2;
@@ -85,27 +69,40 @@ if(functionno == 1) then
                     call MOD_2;
                 multipop(R1,R2,R10,R14);
                 [ptbr + (j * 2)] = -1;
-            endif;
-            if(j > 7 && j <= 9) then
-                [dmt + j] = R16;
-                multipush(R1,R2,R4,R5,R10,R14,R15);
-                    R1 = 2;
-                    R2 = page;
-                    call MOD_2;
+                [ptbr + (j * 2) + 1] = "0000";
+            else
+                if((j <= 3 && [MEMORY_FREE_LIST + page] == 1) || (j >= 8 && j <= 9)) then
+                    
+                    multipush(R1,R2,R4,R5,R10,R14,R15);
+                        R1 = 6;
+                        call MOD_2;
+                        R9 = R0;
+                    multipop(R1,R2,R4,R5,R10,R14,R15);
+                    [DISK_MAP_TABLE + (i * 10) + j] = R9;
+                    breakpoint;
+                    multipush(R1,R2,R4,R5,R10,R14,R15);
+                        R1 = 2;
+                        R2 = page;
+                        call MOD_2;
 
-                    R1 = 1;
-                    R2 = pid;
-                    R3 = page;
-                    R4 = R16;
-                    call MOD_4;
-                multipop(R1,R2,R4,R5,R10,R14,R15);
-                [ptbr + (j * 2)] = -1;
+                        R1 = 1;
+                        R2 = R7;
+                        R3 = page;
+                        R4 = R9;
+                        call MOD_4;
+                    multipop(R1,R2,R4,R5,R10,R14,R15);
+                    [ptbr + (j * 2)] = -1;
+                    [ptbr + (j * 2) + 1] = "0000";
+                    
+                endif;
             endif;
+            
         endif;
         j = j + 1;
+        
     endwhile;
     [PROCESS_TABLE + (i * 16) + 6] = 1;
-
+    breakpoint;
     [SYSTEM_STATUS_TABLE + 4] = [SYSTEM_STATUS_TABLE + 4] + 1;
     [SYSTEM_STATUS_TABLE + 5] = 0;
 
@@ -118,17 +115,19 @@ if(R1 == 2) then
     alias max R12;
     alias swap_pid R13;
     alias pcb R3;
+    
     i = 3;
     curr = -1;
     max = -1;
     swap_pid = -1;
+    breakpoint;
     while(i < 15) do
         pcb = PROCESS_TABLE + (i * 16);
         if([pcb + 4] == READY && [pcb + 6] == 1) then
             curr = [pcb + 0];
             if(curr > max) then
                 max = curr;
-                swap_pid = -1;
+                swap_pid = i;
             endif;
         endif;
         i = i + 1;
@@ -136,4 +135,54 @@ if(R1 == 2) then
     if(swap_pid == -1) then
         return; 
     endif;
+    breakpoint;
+    i = swap_pid;
+
+    alias ptbr R7;
+    ptbr = [PROCESS_TABLE + (i * 16) + 14];
+
+    alias j R14;
+    j = 2;
+    while(j < 10) do
+        if(j > 3 && j <= 7) then
+            j = j + 1;
+            
+            continue;
+        else
+            if([DISK_MAP_TABLE + (i * 10) + j] != -1) then
+                R9 = [DISK_MAP_TABLE + (i * 10) + j];
+                multipush(R1,R2,R3,R9,R7,R10,R14);
+                    R1 = 1;
+                    call MOD_2;
+                    R6 = R0;
+                multipop(R1,R2,R3,R9,R7,R10,R14);
+                [ptbr + (j * 2)] = R6;
+                [ptbr + (j * 2) + 1] = "0110";
+                multipush(R1,R2,R3,R9,R7,R10,R14);
+                    R1 = 2;
+                    R2 = 15;
+                    R3 = R6;
+                    R4 = R9;
+                    call MOD_4;
+                multipop(R1,R2,R3,R9,R7,R10,R14);
+                    
+                multipush(R1,R2,R3,R7,R10,R14);    
+                    R1 = 4;
+                    R2 = R9;
+                    call MOD_2;
+                multipop(R1,R2,R3,R7,R10,R14);
+                [DISK_MAP_TABLE + (i * 10) + j] = -1;
+                
+            endif;
+        endif;
+
+        breakpoint;
+        j = j + 1;
+    endwhile;
+    
+    [PROCESS_TABLE + (i * 16) + 6] = 0;
+    [SYSTEM_STATUS_TABLE + 4] = [SYSTEM_STATUS_TABLE + 4] - 1;
+    [SYSTEM_STATUS_TABLE + 5] = 0;
+    breakpoint;
+    return;
 endif;

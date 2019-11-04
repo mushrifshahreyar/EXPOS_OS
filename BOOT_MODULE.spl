@@ -112,6 +112,10 @@ loadi(49,62);
 loadi(50,63);
 loadi(51,64);
 
+//Loading Pager module
+loadi(52,65);
+loadi(53,66);
+
 //Loading Disk Free list
 loadi(61,2);
 
@@ -156,6 +160,7 @@ alias initptr R0;
 initptr = 8 * 512;
 
 //Process table for init
+[PROCESS_TABLE + 16] = 0;
 [PROCESS_TABLE + 17] = 1;
 [PROCESS_TABLE + 19] = 1;
 [PROCESS_TABLE + 20] = CREATED;
@@ -219,8 +224,6 @@ endwhile;
 [dmt + 5] = 10;
 
 
-alias per_process_table R2;
-per_process_table = [PROCESS_TABLE + 27] * 512 + 495;
 i = 0;
 while(i<16) do
     [77 * 512 + 495 + i] = -1;
@@ -231,9 +234,10 @@ endwhile;
 
 //Setting other states of Process Table to Terminated
 
-i=2;
-while(i<16) do
+i=3;
+while(i<15) do
     initptr = PROCESS_TABLE + (i * 16);
+    [initptr + 0] = 0;
     [initptr + 4] = TERMINATED;
     i = i + 1;
 endwhile;
@@ -245,7 +249,7 @@ endwhile;
 
 i = 0;
 while(i <= 128) do
-    if(i <= 80) then
+    if(i <= 82) then
         [MEMORY_FREE_LIST + i] = 1;
     else
         [MEMORY_FREE_LIST + i] = 0;
@@ -253,30 +257,12 @@ while(i <= 128) do
     i = i + 1;
 endwhile;
 
-[SYSTEM_STATUS_TABLE + 2] = 47;
+[SYSTEM_STATUS_TABLE + 2] = 45;
 [SYSTEM_STATUS_TABLE + 3] = 0;
-
-//Initialising disk map table
-//i = 1;
-//alias k R12;
-//while(i <16) do
-//    k = 0;
-//    while(k < 10) do
-//        [DISK_MAP_TABLE + (i * 10) + k] = -1;
-//        k = k + 1;
-//   endwhile;   
-//    i = i + 1;
-//endwhile;
+[SYSTEM_STATUS_TABLE + 4] = 0;
+[SYSTEM_STATUS_TABLE + 5] = 0;
 
 alias sem_table R6;
-i = 0;
-while(i < 32) do
-    sem_table = SEMAPHORE_TABLE + (i * 4);
-    [sem_table + 0] = -1;
-    [sem_table + 1] = 0;
-    i = i + 1;
-endwhile;
-
 i = 0;
 while(i < 60) do
     sem_table = FILE_STATUS_TABLE

@@ -12,21 +12,33 @@ currProcess = PROCESS_TABLE + (currPID * 16);
 [currProcess + 15] = PTLR;
 
 alias i R2;
-i = currPID + 1;
-while(i<16) do
-    if([PROCESS_TABLE + (i * 16) + 4] == READY) then
-        break;
-    endif;
-    if([PROCESS_TABLE + (i * 16) + 4] == CREATED) then
-        break;
-    endif;
-    i = i + 1;
-endwhile;
 alias newPID R3;
-if(i == 16) then
-    newPID = 0;
+
+if([SYSTEM_STATUS_TABLE + 5] != 0) then
+    i = 15;
+    if([PROCESS_TABLE + (i * 16) + 4] == WAIT_DISK) then
+        newPID = 0;
+    else
+        newPID = 15;
+    endif;
 else
-    newPID = i;
+
+    i = currPID + 1;
+    while(i < 16) do
+        if([PROCESS_TABLE + (i * 16) + 4] == READY && [PROCESS_TABLE + (i * 16) + 6] != 1) then
+            break;
+        endif;
+        if([PROCESS_TABLE + (i * 16) + 4] == CREATED && [PROCESS_TABLE + (i * 16) + 6] != 1) then
+            break;
+        endif;
+        i = i + 1;
+    endwhile;
+    
+    if(i == 16) then
+        newPID = 0;
+    else
+        newPID = i;
+    endif;
 endif;
 
 alias newProcess R4;
@@ -43,6 +55,7 @@ if([newProcess + 4] == CREATED) then
     SP = [newProcess + 13];
     [newProcess + 4] = RUNNING;
     [newProcess + 9] = 0;
+    [newProcess + 6] = 0;
     ireturn;
 endif;
 

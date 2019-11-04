@@ -38,7 +38,9 @@ else
     R2 = [SYSTEM_STATUS_TABLE + 1];
     call MOD_1;
     multipop(R0,R1,R2,R3,R4,R5,R6,R7,R8);
-    
+
+    breakpoint;
+
     alias succReturnval R5;
     alias UserPage R6;
     UserPage = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11];
@@ -98,6 +100,7 @@ else
     [PTBR + 18] = R10;
     [PTBR + 19] = "0110";
     
+    breakpoint;
     //DISK MAP TABLE
     [DISK_MAP_TABLE + (pid * 10) + 0] = -1;
     [DISK_MAP_TABLE + (pid * 10) + 1] = -1;
@@ -123,7 +126,7 @@ else
         [per_process_table + c] = -1;
         c = c + 1;
     endwhile;
-    
+    breakpoint;
     [PROCESS_TABLE + (pid * 16) + 9] = 0;
     ireturn;
 endif;
